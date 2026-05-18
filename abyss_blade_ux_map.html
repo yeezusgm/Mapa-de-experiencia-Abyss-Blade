@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abyss Blade – Mapa de Experiencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #04020a;
+    --abyss: #0a0514;
+    --deep: #0f0820;
+    --shadow: #150c2e;
+    --dusk: #1e1040;
+    --void-purple: #2a1558;
+    --mist: #3d1f7a;
+    --arcane: #6b35c8;
+    --glow: #9b5de5;
+    --spirit: #c084fc;
+    --shimmer: #e879f9;
+    --ice-blue: #1e3a5f;
+    --blade: #2563eb;
+    --frost: #60a5fa;
+    --crystal: #a5f3fc;
+    --gold: #d4a017;
+    --amber: #fbbf24;
+    --ember: #f59e0b;
+    --blood: #7f1d1d;
+    --crimson: #dc2626;
+    --text: #e8d9ff;
+    --text-dim: #a78bbd;
+    --text-faint: #6b4f8a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: .4;
+  }
+
+  /* ── Layout ── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── Progress Bar ── */
+  #progress-bar-container {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,.05);
+    z-index: 1000;
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--arcane), var(--shimmer), var(--frost));
+    box-shadow: 0 0 12px var(--glow), 0 0 24px var(--arcane);
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Stage Tracker ── */
+  #stage-tracker {
+    position: fixed;
+    top: 12px; left: 50%; transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: .65rem;
+    letter-spacing: .2em;
+    color: var(--text-faint);
+    z-index: 1000;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  #stage-tracker span {
+    color: var(--spirit);
+  }
+
+  /* ── Main stage area ── */
+  #main-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px 20px;
+    position: relative;
+    min-height: calc(100vh - 220px);
+  }
+
+  /* ── Ambient bg effects ── */
+  .bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    transition: all 1.5s ease;
+  }
+  #orb1 { width: 500px; height: 500px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(107,53,200,.18) 0%, transparent 70%); }
+  #orb2 { width: 400px; height: 400px; bottom: 0; right: -80px; background: radial-gradient(circle, rgba(37,99,235,.15) 0%, transparent 70%); }
+  #orb3 { width: 300px; height: 300px; top: 40%; left: 40%; background: radial-gradient(circle, rgba(232,121,249,.08) 0%, transparent 70%); }
+
+  /* ── Screen card ── */
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn .6s ease forwards;
+    max-width: 540px;
+    width: 100%;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Title screen ── */
+  .game-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(2.8rem, 8vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: .2em;
+    background: linear-gradient(135deg, #fff 0%, var(--spirit) 40%, var(--shimmer) 70%, var(--frost) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(155,93,229,.6));
+    letter-spacing: .04em;
+  }
+  .game-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: .85rem;
+    letter-spacing: .35em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+
+  /* Sword SVG decoration */
+  .sword-deco {
+    width: 4px;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, var(--frost), var(--glow), var(--frost), transparent);
+    margin: 1rem auto;
+    position: relative;
+    box-shadow: 0 0 8px var(--arcane);
+  }
+  .sword-deco::before, .sword-deco::after {
+    content: '';
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+  }
+  .sword-deco::before {
+    top: 30%; width: 24px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--glow), transparent);
+  }
+  .sword-deco::after {
+    bottom: 0; width: 10px; height: 10px;
+    background: var(--shimmer);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--shimmer);
+  }
+
+  /* ── Screen headings ── */
+  .screen-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.3rem, 4vw, 2rem);
+    font-weight: 600;
+    color: var(--spirit);
+    margin-bottom: .3em;
+    letter-spacing: .06em;
+    text-shadow: 0 0 20px rgba(192,132,252,.4);
+  }
+  .screen-divider {
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glow), transparent);
+    margin: .8rem auto 1.4rem;
+  }
+  .screen-body {
+    font-size: 1.1rem;
+    line-height: 1.75;
+    color: var(--text-dim);
+    max-width: 420px;
+    font-style: italic;
+    margin-bottom: 1.8rem;
+  }
+  .screen-body strong {
+    color: var(--text);
+    font-style: normal;
+  }
+
+  /* ── Control grid (tutorial) ── */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .7rem;
+    width: 100%;
+    max-width: 360px;
+    margin-bottom: 1.8rem;
+  }
+  .control-item {
+    background: rgba(42,21,88,.4);
+    border: 1px solid rgba(107,53,200,.2);
+    border-radius: 8px;
+    padding: .7rem 1rem;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .control-item::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--arcane);
+  }
+  .control-key {
+    font-family: 'Cinzel', serif;
+    font-size: .7rem;
+    letter-spacing: .15em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: .15rem;
+  }
+  .control-desc {
+    font-size: .9rem;
+    color: var(--text-dim);
+  }
+
+  /* ── Scene visual (pixel art style) ── */
+  .scene-visual {
+    width: 320px; height: 120px;
+    background: var(--abyss);
+    border: 1px solid rgba(107,53,200,.3);
+    border-radius: 4px;
+    margin-bottom: 1.4rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(0,0,0,.8);
+  }
+  .scene-floor {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 20px;
+    background: linear-gradient(to top, var(--shadow), transparent);
+  }
+  .scene-bg-tiles {
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,.02) 20px),
+      repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,.02) 20px);
+  }
+  .scene-player {
+    position: absolute;
+    bottom: 20px; left: 40px;
+    width: 16px; height: 28px;
+  }
+  .player-body { width: 100%; height: 100%; background: var(--glow); border-radius: 2px; box-shadow: 0 0 8px var(--arcane); position: relative; }
+  .player-body::before { content: ''; position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: var(--spirit); border-radius: 50%; }
+  .player-body::after { content: ''; position: absolute; right: -8px; top: 40%; width: 8px; height: 2px; background: var(--frost); box-shadow: 0 0 4px var(--frost); }
+  .scene-enemy {
+    position: absolute;
+    bottom: 20px; right: 50px;
+    width: 22px; height: 26px;
+  }
+  .enemy-body { width: 100%; height: 100%; background: var(--crimson); border-radius: 2px; box-shadow: 0 0 10px rgba(220,38,38,.6); position: relative; }
+  .enemy-body::before { content: ''; position: absolute; top: 2px; left: 4px; width: 14px; height: 8px; background: #7f1d1d; border-radius: 50% 50% 0 0; }
+  .enemy-eye { position: absolute; top: 4px; left: 6px; width: 3px; height: 3px; background: var(--shimmer); border-radius: 50%; box-shadow: 0 0 4px var(--shimmer); }
+  .enemy-eye.r { left: 13px; }
+
+  .scene-platform {
+    position: absolute;
+    bottom: 20px;
+    height: 6px;
+    background: linear-gradient(to top, #1a0d3d, #2a1558);
+    border-top: 1px solid rgba(107,53,200,.3);
+  }
+
+  /* particle floating */
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--spirit);
+    border-radius: 50%;
+    box-shadow: 0 0 4px var(--arcane);
+    animation: drift linear infinite;
+    opacity: .6;
+  }
+  @keyframes drift {
+    from { transform: translateY(0) translateX(0); opacity: .6; }
+    to   { transform: translateY(-100px) translateX(var(--dx, 10px)); opacity: 0; }
+  }
+
+  /* ── Health/combat UI ── */
+  .combat-ui {
+    width: 100%;
+    max-width: 360px;
+    background: rgba(10,5,20,.6);
+    border: 1px solid rgba(107,53,200,.25);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.4rem;
+  }
+  .health-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+  }
+  .health-label {
+    font-family: 'Cinzel', serif;
+    font-size: .65rem;
+    letter-spacing: .15em;
+    color: var(--text-faint);
+    width: 50px;
+    text-transform: uppercase;
+  }
+  .health-bar {
+    flex: 1; height: 8px;
+    background: rgba(255,255,255,.07);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .health-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .4s ease;
+  }
+  .health-fill.player { background: linear-gradient(90deg, var(--arcane), var(--glow)); box-shadow: 0 0 6px var(--arcane); width: 80%; }
+  .health-fill.enemy  { background: linear-gradient(90deg, var(--blood), var(--crimson)); box-shadow: 0 0 6px var(--crimson); width: 100%; }
+  .health-fill.enemy.hit { width: 40%; }
+
+  /* ── Item / lore box ── */
+  .lore-box {
+    width: 100%;
+    max-width: 360px;
+    border: 1px solid rgba(212,160,23,.25);
+    background: rgba(15,8,20,.7);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.4rem;
+    position: relative;
+  }
+  .lore-box::before {
+    content: '✦';
+    position: absolute;
+    top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--void);
+    padding: 0 6px;
+    color: var(--gold);
+    font-size: .8rem;
+  }
+  .lore-title {
+    font-family: 'Cinzel', serif;
+    font-size: .75rem;
+    letter-spacing: .2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: .4rem;
+  }
+  .lore-text {
+    font-size: .95rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── Locked door ── */
+  .door-visual {
+    width: 80px; height: 110px;
+    background: linear-gradient(to bottom, #1e1040, #0a0514);
+    border: 2px solid rgba(107,53,200,.3);
+    border-radius: 6px 6px 0 0;
+    margin: 0 auto 1.4rem;
+    position: relative;
+    box-shadow: 0 0 20px rgba(107,53,200,.15);
+  }
+  .door-lock {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 20px; height: 20px;
+    background: var(--blood);
+    border-radius: 50%;
+    border: 2px solid var(--crimson);
+    box-shadow: 0 0 8px var(--crimson);
+  }
+  .door-lock::after {
+    content: ''; position: absolute;
+    bottom: -8px; left: 50%; transform: translateX(-50%);
+    width: 6px; height: 10px;
+    background: var(--crimson);
+    border-radius: 2px;
+  }
+  .door-open .door-lock {
+    background: var(--arcane);
+    border-color: var(--glow);
+    box-shadow: 0 0 12px var(--glow);
+  }
+
+  /* ── Key item ── */
+  .key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(42,21,88,.5);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: .4rem .8rem;
+    margin-bottom: 1.2rem;
+    font-family: 'Cinzel', serif;
+    font-size: .75rem;
+    letter-spacing: .1em;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .key-gem {
+    width: 10px; height: 10px;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* ── Boss ── */
+  .boss-visual {
+    width: 60px; height: 70px;
+    background: linear-gradient(to bottom, #3d0000, #7f1d1d);
+    border: 2px solid var(--crimson);
+    border-radius: 4px;
+    margin: 0 auto 1rem;
+    position: relative;
+    box-shadow: 0 0 20px rgba(220,38,38,.4), inset 0 0 20px rgba(0,0,0,.5);
+    animation: bossFloat 3s ease-in-out infinite;
+  }
+  @keyframes bossFloat {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+  }
+  .boss-visual::before {
+    content: '';
+    position: absolute; top: 10px; left: 10px;
+    width: 40px; height: 20px;
+    background: #4b0000;
+    border-radius: 50% 50% 0 0;
+  }
+  .boss-eye-l, .boss-eye-r {
+    position: absolute; top: 18px;
+    width: 8px; height: 8px;
+    background: var(--shimmer);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--shimmer);
+  }
+  .boss-eye-l { left: 14px; }
+  .boss-eye-r { right: 14px; }
+
+  /* ── Final screen ── */
+  .corruption-text {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: var(--spirit);
+    letter-spacing: .06em;
+    text-shadow: 0 0 20px var(--arcane);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .final-quote {
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--text-faint);
+    max-width: 360px;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  /* ── Buttons ── */
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .7rem;
+    justify-content: center;
+  }
+
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: .8rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: .7rem 1.8rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all .25s ease;
+  }
+  .btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.08), transparent);
+    pointer-events: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--mist), var(--arcane));
+    color: #fff;
+    box-shadow: 0 0 16px rgba(107,53,200,.4), 0 2px 8px rgba(0,0,0,.5);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--arcane), var(--glow));
+    box-shadow: 0 0 24px rgba(155,93,229,.6), 0 2px 8px rgba(0,0,0,.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: rgba(21,12,46,.8);
+    color: var(--text-dim);
+    border: 1px solid rgba(107,53,200,.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  }
+  .btn-secondary:hover {
+    background: rgba(42,21,88,.6);
+    color: var(--text);
+    border-color: rgba(107,53,200,.6);
+    transform: translateY(-1px);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, var(--blood), var(--crimson));
+    color: #fff;
+    box-shadow: 0 0 14px rgba(220,38,38,.35), 0 2px 8px rgba(0,0,0,.5);
+  }
+  .btn-danger:hover {
+    box-shadow: 0 0 22px rgba(220,38,38,.55), 0 2px 8px rgba(0,0,0,.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #92600a, var(--gold));
+    color: #fff;
+    box-shadow: 0 0 14px rgba(212,160,23,.3);
+  }
+  .btn-gold:hover {
+    box-shadow: 0 0 22px rgba(251,191,36,.5);
+    transform: translateY(-1px);
+  }
+
+  .btn:active { transform: translateY(1px) !important; }
+
+  /* ── Menu buttons (large) ── */
+  .menu-btn {
+    display: block;
+    width: 220px;
+    font-family: 'Cinzel', serif;
+    font-size: .85rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    padding: .85rem 1.5rem;
+    background: rgba(21,12,46,.7);
+    color: var(--text-dim);
+    border: 1px solid rgba(107,53,200,.2);
+    border-left: 3px solid var(--arcane);
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    text-align: left;
+    transition: all .2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .menu-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(107,53,200,.15), transparent);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+  .menu-btn:hover::before { transform: translateX(0); }
+  .menu-btn:hover {
+    color: var(--text);
+    border-left-color: var(--glow);
+    transform: translateX(4px);
+  }
+  .menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+  }
+  .menu-arrow { margin-right: .5rem; color: var(--arcane); }
+
+  /* ── UX Map Panel ── */
+  #ux-panel {
+    background: rgba(6,3,15,.85);
+    border-top: 1px solid rgba(107,53,200,.2);
+    backdrop-filter: blur(8px);
+    padding: 16px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  #ux-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--arcane), transparent);
+  }
+
+  .ux-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .ux-badge {
+    font-family: 'Cinzel', serif;
+    font-size: .6rem;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: var(--arcane);
+    background: rgba(107,53,200,.12);
+    border: 1px solid rgba(107,53,200,.3);
+    padding: .2rem .6rem;
+    border-radius: 2px;
+  }
+  .ux-stage-name {
+    font-family: 'Cinzel', serif;
+    font-size: .75rem;
+    letter-spacing: .1em;
+    color: var(--spirit);
+  }
+
+  .ux-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .ux-item {
+    background: rgba(15,8,32,.6);
+    border: 1px solid rgba(107,53,200,.12);
+    border-radius: 4px;
+    padding: .6rem .8rem;
+    position: relative;
+  }
+  .ux-item-label {
+    font-family: 'Cinzel', serif;
+    font-size: .55rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .ux-item-label .dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .ux-item-text {
+    font-size: .82rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* label colors */
+  .ux-accion   .ux-item-label { color: var(--frost); }
+  .ux-accion   .dot { background: var(--frost); box-shadow: 0 0 4px var(--frost); }
+  .ux-pensa    .ux-item-label { color: var(--spirit); }
+  .ux-pensa    .dot { background: var(--spirit); box-shadow: 0 0 4px var(--spirit); }
+  .ux-emocion  .ux-item-label { color: var(--amber); }
+  .ux-emocion  .dot { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+  .ux-dolor    .ux-item-label { color: var(--crimson); }
+  .ux-dolor    .dot { background: var(--crimson); box-shadow: 0 0 4px var(--crimson); }
+  .ux-oportu   .ux-item-label { color: #4ade80; }
+  .ux-oportu   .dot { background: #4ade80; box-shadow: 0 0 4px #4ade80; }
+
+  /* ── Emotion badge ── */
+  .emotion-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    padding: .15rem .5rem;
+    border-radius: 20px;
+    font-style: normal;
+  }
+
+  /* ── Rune decoration ── */
+  .rune-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: .8rem 0;
+    opacity: .25;
+  }
+  .rune { font-size: 1.4rem; color: var(--glow); }
+
+  /* combat flash */
+  @keyframes attackFlash {
+    0%  { background: rgba(220,38,38,.15); }
+    100%{ background: transparent; }
+  }
+  .attack-flash { animation: attackFlash .3s ease; }
+
+  /* pulse glow */
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(155,93,229,.3); }
+    50%       { box-shadow: 0 0 25px rgba(155,93,229,.6); }
+  }
+  .glow-pulse { animation: pulseGlow 2s ease-in-out infinite; }
+
+  /* floating gems */
+  @keyframes gemFloat {
+    0%, 100% { transform: translateY(0) rotate(45deg); }
+    50%       { transform: translateY(-5px) rotate(45deg); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--void); }
+  ::-webkit-scrollbar-thumb { background: var(--mist); border-radius: 2px; }
+
+</style>
+</head>
+<body>
+
+<!-- Ambient orbs -->
+<div class="bg-orb" id="orb1"></div>
+<div class="bg-orb" id="orb2"></div>
+<div class="bg-orb" id="orb3"></div>
+
+<!-- Progress -->
+<div id="progress-bar-container">
+  <div id="progress-bar" style="width:0%"></div>
+</div>
+<div id="stage-tracker">Pantalla <span id="screen-num">1</span> de <span id="screen-total">14</span></div>
+
+<div id="app">
+  <div id="main-stage">
+
+    <!-- ════════════════════════════════ S1 – INICIO ════════════════════════════════ -->
+    <div class="screen active" id="s1">
+      <div class="rune-row"><span class="rune">ᚠ</span><span class="rune">ᚢ</span><span class="rune">ᚦ</span><span class="rune">ᚨ</span><span class="rune">ᚱ</span></div>
+      <div class="game-title">Abyss Blade</div>
+      <div class="game-subtitle">▸ The Depths Await ◂</div>
+      <div class="sword-deco"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary glow-pulse" onclick="go(2)">⬥ Iniciar</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S2 – MENÚ PRINCIPAL ════════════════════════════════ -->
+    <div class="screen" id="s2">
+      <div class="screen-title">Menú Principal</div>
+      <div class="screen-divider"></div>
+      <div class="menu-group">
+        <button class="menu-btn" onclick="go(5)"><span class="menu-arrow">▶</span> Jugar</button>
+        <button class="menu-btn" onclick="go(3)"><span class="menu-arrow">▶</span> Opciones</button>
+        <button class="menu-btn" onclick="go(4)"><span class="menu-arrow">▶</span> Créditos</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S3 – OPCIONES ════════════════════════════════ -->
+    <div class="screen" id="s3">
+      <div class="screen-title">Opciones</div>
+      <div class="screen-divider"></div>
+      <div class="controls-grid">
+        <div class="control-item"><div class="control-key">🔊 Sonido</div><div class="control-desc">Música y efectos de audio ajustables</div></div>
+        <div class="control-item"><div class="control-key">🎮 Controles</div><div class="control-desc">Reasignar teclas y gamepad</div></div>
+        <div class="control-item"><div class="control-key">🖥 Pantalla</div><div class="control-desc">Resolución, brillo y modo</div></div>
+        <div class="control-item"><div class="control-key">⚙️ Sistema</div><div class="control-desc">Idioma y opciones de guardado</div></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="go(2)">← Volver al menú</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S4 – CRÉDITOS ════════════════════════════════ -->
+    <div class="screen" id="s4">
+      <div class="screen-title">Créditos</div>
+      <div class="screen-divider"></div>
+      <div class="lore-box">
+        <div class="lore-title">⚔ Proyecto creado por</div>
+        <div class="lore-text" style="font-style:normal;font-size:1.1rem;color:var(--spirit);">Tu Nombre</div>
+        <br>
+        <div class="lore-text">Diseño de experiencia de usuario<br>Mapa interactivo de recorrido del jugador<br>Fantasía oscura · Metroidvania · 2D</div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="go(2)">← Volver al menú</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S5 – INTRO NARRATIVA ════════════════════════════════ -->
+    <div class="screen" id="s5">
+      <div class="screen-title">El Mundo Corrompido</div>
+      <div class="screen-divider"></div>
+      <div class="rune-row"><span class="rune">ᛏ</span><span class="rune">ᛒ</span><span class="rune">ᛖ</span></div>
+      <div class="screen-body">
+        Hace milenios, la <strong>Espada del Abismo</strong> fue forjada en las grietas más profundas del mundo.
+        Su poder corrompió todo lo que tocó: bestias, hombres, incluso la misma tierra.
+        <br><br>
+        Hoy, la corrupción se extiende una vez más.<br>Tú eres la última esperanza.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="go(6)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S6 – TUTORIAL ════════════════════════════════ -->
+    <div class="screen" id="s6">
+      <div class="screen-title">Tutorial</div>
+      <div class="screen-divider"></div>
+      <div class="controls-grid">
+        <div class="control-item"><div class="control-key">← → / A D</div><div class="control-desc">Moverse</div></div>
+        <div class="control-item"><div class="control-key">↑ / W / Espacio</div><div class="control-desc">Saltar</div></div>
+        <div class="control-item"><div class="control-key">Z / J</div><div class="control-desc">Atacar</div></div>
+        <div class="control-item"><div class="control-key">E / F</div><div class="control-desc">Interactuar</div></div>
+      </div>
+      <div class="screen-body" style="font-size:.95rem;margin-bottom:1rem;">
+        Domina estos controles antes de adentrarte en el Abismo.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="go(7)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S7 – EXPLORACIÓN ════════════════════════════════ -->
+    <div class="screen" id="s7">
+      <div class="screen-title">Exploración Inicial</div>
+      <div class="screen-divider"></div>
+      <div class="scene-visual" id="scene-explore">
+        <div class="scene-bg-tiles"></div>
+        <div class="scene-platform" style="bottom:20px;left:0;right:0;height:4px;"></div>
+        <div class="scene-platform" style="bottom:50px;left:100px;width:60px;"></div>
+        <div class="scene-platform" style="bottom:75px;left:210px;width:50px;"></div>
+        <div class="scene-player"><div class="player-body"></div></div>
+        <div class="scene-floor"></div>
+        <!-- particles -->
+        <div class="particle" style="left:10%;bottom:30px;--dx:8px;animation-duration:3s;animation-delay:0s;"></div>
+        <div class="particle" style="left:30%;bottom:30px;--dx:-5px;animation-duration:4s;animation-delay:.8s;"></div>
+        <div class="particle" style="left:60%;bottom:30px;--dx:10px;animation-duration:2.5s;animation-delay:.3s;"></div>
+        <div class="particle" style="left:80%;bottom:30px;--dx:-8px;animation-duration:3.5s;animation-delay:1.2s;"></div>
+      </div>
+      <div class="screen-body">
+        El héroe avanza por las ruinas del <strong>Reino Sombrío</strong>.
+        Ecos de antiguos guerreros resuenan en las paredes de piedra negra.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="go(8)">Avanzar →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S8 – PRIMER COMBATE ════════════════════════════════ -->
+    <div class="screen" id="s8">
+      <div class="screen-title">¡Primer Combate!</div>
+      <div class="screen-divider"></div>
+      <div class="scene-visual" id="scene-combat">
+        <div class="scene-bg-tiles"></div>
+        <div class="scene-platform" style="bottom:20px;left:0;right:0;height:4px;"></div>
+        <div class="scene-player" style="left:30px"><div class="player-body"></div></div>
+        <div class="scene-enemy" id="enemy1">
+          <div class="enemy-body">
+            <div class="enemy-eye"></div><div class="enemy-eye r"></div>
+          </div>
+        </div>
+        <div class="scene-floor"></div>
+      </div>
+      <div class="combat-ui">
+        <div class="health-row">
+          <span class="health-label">Héroe</span>
+          <div class="health-bar"><div class="health-fill player" id="player-hp"></div></div>
+        </div>
+        <div class="health-row">
+          <span class="health-label">Enemigo</span>
+          <div class="health-bar"><div class="health-fill enemy" id="enemy-hp"></div></div>
+        </div>
+      </div>
+      <div class="screen-body" style="margin-bottom:.8rem;">
+        Un <strong>Corrompido del Abismo</strong> bloquea el camino.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-danger" id="btn-attack" onclick="attackEnemy()">⚔ Atacar</button>
+        <button class="btn btn-primary" id="btn-next-combat" style="display:none" onclick="go(9)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S9 – OBJETO NARRATIVO ════════════════════════════════ -->
+    <div class="screen" id="s9">
+      <div class="screen-title">Descubrimiento</div>
+      <div class="screen-divider"></div>
+      <div class="lore-box" style="animation: pulseGlow 2s ease-in-out infinite;">
+        <div class="lore-title">📜 Fragmento del Abismo</div>
+        <div class="lore-text">
+          "...la Espada fue sellada bajo la <strong>Torre de los Caídos</strong>,
+          custodiada por el Guardián Eterno.
+          Solo quien posea la <em>Llave del Abismo</em> podrá cruzar sus puertas..."
+        </div>
+      </div>
+      <div class="screen-body">
+        Un antiguo fragmento revela la ubicación de la Espada.
+        La Llave del Abismo es clave para continuar.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-gold" onclick="go(10)">✦ Interactuar</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S10 – ZONA BLOQUEADA ════════════════════════════════ -->
+    <div class="screen" id="s10">
+      <div class="screen-title">Camino Bloqueado</div>
+      <div class="screen-divider"></div>
+      <div class="door-visual">
+        <div class="door-lock"></div>
+      </div>
+      <div class="screen-body">
+        Una enorme puerta de obsidiana bloquea el paso.
+        Un símbolo rojo brilla en el centro:<br>
+        <strong>"Necesitas la Llave del Abismo para continuar."</strong>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="go(11)">↩ Buscar otro camino</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S11 – RUTA ALTERNATIVA ════════════════════════════════ -->
+    <div class="screen" id="s11">
+      <div class="screen-title">Ruta Alternativa</div>
+      <div class="screen-divider"></div>
+      <div class="scene-visual">
+        <div class="scene-bg-tiles"></div>
+        <div class="scene-platform" style="bottom:20px;left:0;right:0;height:4px;"></div>
+        <div class="scene-platform" style="bottom:50px;left:80px;width:80px;"></div>
+        <div class="scene-player" style="left:90px;bottom:50px;position:absolute;"><div class="player-body"></div></div>
+        <div style="position:absolute;bottom:55px;right:30px;width:12px;height:12px;background:var(--gold);transform:rotate(45deg);box-shadow:0 0 12px var(--gold);animation:gemFloat 2s ease-in-out infinite;"></div>
+        <div class="scene-floor"></div>
+        <div class="particle" style="left:70%;bottom:55px;--dx:-5px;animation-duration:2s;"></div>
+        <div class="particle" style="left:75%;bottom:60px;--dx:8px;animation-duration:2.8s;animation-delay:.5s;"></div>
+      </div>
+      <div class="screen-body">
+        Explorando los <strong>Pasajes Olvidados</strong>, el héroe encuentra
+        la <em>Llave del Abismo</em> escondida en un altar secreto.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-gold" onclick="go(12)">✦ Recoger Llave</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S12 – ZONA DESBLOQUEADA ════════════════════════════════ -->
+    <div class="screen" id="s12">
+      <div class="screen-title">Puerta Abierta</div>
+      <div class="screen-divider"></div>
+      <div class="door-visual door-open" id="unlocked-door">
+        <div class="door-lock"></div>
+      </div>
+      <div class="key-item"><div class="key-gem"></div>Llave del Abismo — Obtenida</div>
+      <div class="screen-body">
+        La puerta de obsidiana cruje y se abre lentamente.
+        El resplandor púrpura del Abismo llena el pasillo.
+        <br><strong>El camino hacia la Torre de los Caídos está abierto.</strong>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="go(13)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ S13 – MINI JEFE ════════════════════════════════ -->
+    <div class="screen" id="s13">
+      <div class="screen-title">Mini Jefe: Guardián Corrupto</div>
+      <div class="screen-divider"></div>
+      <div class="boss-visual">
+        <div class="boss-eye-l"></div>
+        <div class="boss-eye-r"></div>
+      </div>
+      <div class="combat-ui">
+        <div class="health-row">
+          <span class="health-label">Héroe</span>
+          <div class="health-bar"><div class="health-fill player" id="boss-player-hp" style="width:80%;"></div></div>
+        </div>
+        <div class="health-row">
+          <span class="health-label" style="font-size:.55rem;letter-spacing:.08em;">Guardián</span>
+          <div class="health-bar"><div class="health-fill enemy" id="boss-enemy-hp"></div></div>
+        </div>
+      </div>
+      <div class="screen-body" style="margin-bottom:.8rem;">
+        El <strong>Guardián Corrupto</strong> desciende desde las sombras.
+        Su armadura absorbe la oscuridad del Abismo.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-danger" onclick="bossAttack('attack')">⚔ Atacar</button>
+        <button class="btn btn-secondary" onclick="bossAttack('dodge')">↩ Esquivar</button>
+        <button class="btn btn-gold" id="btn-defeat-boss" style="display:none" onclick="go(14)">☠ Derrotar Jefe</button>
+      </div>
+      <p id="boss-msg" style="margin-top:.6rem;font-size:.85rem;color:var(--spirit);font-style:italic;min-height:1.2em;text-align:center;"></p>
+    </div>
+
+    <!-- ════════════════════════════════ S14 – FINAL DE DEMO ════════════════════════════════ -->
+    <div class="screen" id="s14">
+      <div class="rune-row"><span class="rune">ᛁ</span><span class="rune">ᚾ</span><span class="rune">ᛁ</span><span class="rune">ᛏ</span><span class="rune">ᛁ</span><span class="rune">ᛟ</span></div>
+      <div class="screen-title" style="font-size:1.5rem;">Fin de la Demo</div>
+      <div class="screen-divider"></div>
+      <div class="corruption-text">
+        "La corrupción del Abismo<br>apenas comienza..."
+      </div>
+      <div class="final-quote">
+        Has visto solo la superficie del caos que yace bajo el mundo.
+        La Espada del Abismo espera, y con ella, el destino de todo lo que existe.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="go(2)">↩ Volver al menú</button>
+        <button class="btn btn-primary" onclick="restartExperience()">↺ Reiniciar experiencia</button>
+      </div>
+    </div>
+
+  </div><!-- end main-stage -->
+
+  <!-- ══════════════════════════════ UX MAP PANEL ══════════════════════════════ -->
+  <div id="ux-panel">
+    <div class="ux-header">
+      <div class="ux-badge">Mapa de Experiencia</div>
+      <div class="ux-stage-name" id="ux-stage-name">—</div>
+    </div>
+    <div class="ux-grid">
+      <div class="ux-item ux-accion">
+        <div class="ux-item-label"><span class="dot"></span>Acción del usuario</div>
+        <div class="ux-item-text" id="ux-accion">—</div>
+      </div>
+      <div class="ux-item ux-pensa">
+        <div class="ux-item-label"><span class="dot"></span>Pensamiento</div>
+        <div class="ux-item-text" id="ux-pensa">—</div>
+      </div>
+      <div class="ux-item ux-emocion">
+        <div class="ux-item-label"><span class="dot"></span>Emoción</div>
+        <div class="ux-item-text" id="ux-emocion">—</div>
+      </div>
+      <div class="ux-item ux-dolor">
+        <div class="ux-item-label"><span class="dot"></span>Punto de dolor</div>
+        <div class="ux-item-text" id="ux-dolor">—</div>
+      </div>
+      <div class="ux-item ux-oportu" style="grid-column: span 2;">
+        <div class="ux-item-label"><span class="dot"></span>Oportunidad de mejora</div>
+        <div class="ux-item-text" id="ux-oportu">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOTAL = 14;
+let bossHits = 0;
+let enemyDefeated = false;
+
+const uxData = {
+  1: {
+    stage: "Pantalla de inicio",
+    accion: "El usuario observa el título y decide si iniciar.",
+    pensa: '"¿De qué va este juego? Parece oscuro e interesante."',
+    emocion: "✨ Expectativa",
+    dolor: "Si la pantalla tarda en cargar, el usuario puede perder interés.",
+    oportu: "Agregar una animación de título llamativa para enganchar desde el primer segundo."
+  },
+  2: {
+    stage: "Menú principal",
+    accion: "El usuario examina las opciones disponibles y decide qué hacer.",
+    pensa: '"Quiero empezar a jugar ya."',
+    emocion: "💜 Curiosidad",
+    dolor: "Demasiadas opciones pueden generar indecisión.",
+    oportu: "Usar botones claros y visibles con jerarquía visual (Jugar destacado sobre el resto)."
+  },
+  3: {
+    stage: "Pantalla de opciones",
+    accion: "El usuario ajusta configuraciones de sonido, controles y pantalla.",
+    pensa: '"¿Cómo configuro el sonido? ¿Puedo cambiar los controles?"',
+    emocion: "🔧 Control",
+    dolor: "Sin tooltips ni vistas previas, los ajustes pueden ser confusos.",
+    oportu: "Mostrar cambios en tiempo real al ajustar cada opción."
+  },
+  4: {
+    stage: "Créditos",
+    accion: "El usuario lee quién creó el proyecto.",
+    pensa: '"Interesante saber quién está detrás del juego."',
+    emocion: "🙏 Reconocimiento",
+    dolor: "Pantalla aburrida si solo hay texto plano.",
+    oportu: "Añadir pequeñas animaciones o agradecimientos especiales para humanizar el proyecto."
+  },
+  5: {
+    stage: "Introducción narrativa",
+    accion: "El usuario lee el lore del mundo y la historia del juego.",
+    pensa: '"¿Qué es la Espada del Abismo? Quiero saber más."',
+    emocion: "📖 Inmersión",
+    dolor: "Texto muy largo puede aburrir antes de que empiece el juego.",
+    oportu: "Texto breve, con fuente atmosférica y efecto de aparición gradual (typewriter)."
+  },
+  6: {
+    stage: "Tutorial",
+    accion: "El usuario aprende los controles básicos del juego.",
+    pensa: '"¿WASD o flechas? Quiero practir antes de enfrentar enemigos."',
+    emocion: "📚 Aprendizaje",
+    dolor: "Un tutorial largo o complejo puede desmotivar.",
+    oportu: "Tutorial corto, visual, con ejemplos interactivos para cada control."
+  },
+  7: {
+    stage: "Exploración inicial",
+    accion: "El usuario explora libremente el escenario oscuro.",
+    pensa: '"¿Qué hay más adelante? Todo se ve misterioso."',
+    emocion: "🗺 Asombro",
+    dolor: "Sin indicaciones, el usuario puede no saber a dónde ir.",
+    oportu: "Usar guías sutiles de luz o partículas para orientar al jugador."
+  },
+  8: {
+    stage: "Primer combate",
+    accion: "El usuario enfrenta y derrota a su primer enemigo corrupto.",
+    pensa: '"¿Cómo ataco? ¿Cuánta vida tiene el enemigo?"',
+    emocion: "⚔️ Adrenalina",
+    dolor: "Sin retroalimentación visual del daño, el combate se siente vacío.",
+    oportu: "Agregar efectos de impacto, sonido y barras de vida claramente visibles."
+  },
+  9: {
+    stage: "Objeto narrativo",
+    accion: "El usuario encuentra un fragmento de lore e interactúa con él.",
+    pensa: '"Una Llave del Abismo... ¿dónde estará eso?"',
+    emocion: "🔍 Intriga",
+    dolor: "Si el texto es muy críptico, el jugador puede ignorarlo.",
+    oportu: "Resaltar palabras clave y añadir un diario de misiones para rastrear pistas."
+  },
+  10: {
+    stage: "Zona bloqueada",
+    accion: "El usuario intenta avanzar pero no puede sin la llave.",
+    pensa: '"Necesito la llave. ¿Dónde la busco?"',
+    emocion: "🚫 Frustración",
+    dolor: "Sin indicación de dónde ir, el jugador puede quedarse atascado.",
+    oportu: "Mostrar un mapa o indicador de misión que señale la dirección alternativa."
+  },
+  11: {
+    stage: "Ruta alternativa",
+    accion: "El usuario explora otra zona y encuentra la Llave del Abismo.",
+    pensa: '"¡Aquí estaba la llave! Ahora puedo volver."',
+    emocion: "💡 Satisfacción",
+    dolor: "Si la zona alternativa es confusa o demasiado larga, el jugador puede abandonar.",
+    oportu: "Diseñar rutas alternativas como mini-aventuras cortas con recompensa clara."
+  },
+  12: {
+    stage: "Zona desbloqueada",
+    accion: "El usuario regresa con la llave y abre la puerta.",
+    pensa: '"¡Lo logré! La puerta se abrió."',
+    emocion: "🎉 Logro",
+    dolor: "El backtracking puede volverse tedioso si el camino es muy largo.",
+    oportu: "Incluir atajos o teletransportadores para reducir el tiempo de retorno."
+  },
+  13: {
+    stage: "Mini jefe",
+    accion: "El usuario enfrenta al Guardián Corrupto con múltiples opciones de combate.",
+    pensa: '"Este enemigo es más fuerte, necesito ser estratégico."',
+    emocion: "😤 Determinación",
+    dolor: "Si el jefe no da señales de ataque, el jugador no puede reaccionar.",
+    oportu: "Implementar telegrafía de ataques (indicadores visuales) para que el jugador pueda responder."
+  },
+  14: {
+    stage: "Final de demo",
+    accion: "El usuario termina la demo y decide si volver al menú o reiniciar.",
+    pensa: '"¿Cuándo sale el juego completo? Quiero seguir jugando."',
+    emocion: "🌑 Ganas de más",
+    dolor: "Un final abrupto puede decepcionar al jugador.",
+    oportu: "Mostrar teaser del contenido futuro o dejar un cliffhanger narrativo atractivo."
+  }
+};
+
+function go(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s' + n).classList.add('active');
+  document.getElementById('screen-num').textContent = n;
+  const pct = ((n - 1) / (TOTAL - 1)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  updateUX(n);
+  // reset combat states when leaving
+  if (n === 8) { resetCombat(); }
+  if (n === 13) { resetBoss(); }
+}
+
+function updateUX(n) {
+  const d = uxData[n];
+  if (!d) return;
+  document.getElementById('ux-stage-name').textContent = d.stage;
+  document.getElementById('ux-accion').textContent = d.accion;
+  document.getElementById('ux-pensa').textContent = d.pensa;
+  document.getElementById('ux-emocion').textContent = d.emocion;
+  document.getElementById('ux-dolor').textContent = d.dolor;
+  document.getElementById('ux-oportu').textContent = d.oportu;
+}
+
+// ── Combat mechanics ──
+function resetCombat() {
+  enemyDefeated = false;
+  document.getElementById('enemy-hp').style.width = '100%';
+  document.getElementById('enemy-hp').classList.remove('hit');
+  document.getElementById('player-hp').style.width = '80%';
+  document.getElementById('btn-attack').style.display = 'inline-block';
+  document.getElementById('btn-next-combat').style.display = 'none';
+  document.getElementById('enemy1').style.opacity = '1';
+}
+
+function attackEnemy() {
+  const hp = document.getElementById('enemy-hp');
+  hp.classList.add('hit');
+  const scene = document.getElementById('scene-combat');
+  scene.style.animation = 'attackFlash .3s ease';
+  setTimeout(() => scene.style.animation = '', 400);
+  setTimeout(() => {
+    if (!enemyDefeated) {
+      enemyDefeated = true;
+      document.getElementById('enemy1').style.opacity = '.2';
+      document.getElementById('btn-attack').style.display = 'none';
+      document.getElementById('btn-next-combat').style.display = 'inline-block';
+    }
+  }, 500);
+}
+
+// ── Boss mechanics ──
+let bossHP = 100;
+function resetBoss() {
+  bossHits = 0;
+  bossHP = 100;
+  document.getElementById('boss-enemy-hp').style.width = '100%';
+  document.getElementById('boss-player-hp').style.width = '80%';
+  document.getElementById('btn-defeat-boss').style.display = 'none';
+  document.getElementById('boss-msg').textContent = '';
+  document.querySelector('.boss-visual').style.opacity = '1';
+}
+
+const bossMessages = [
+  '"¡El Guardián recibe el golpe!"',
+  '"¡Ataque crítico! La armadura se agrieta."',
+  '"¡El Guardián retrocede!"',
+  '"¡Su poder mengua ante tu espada!"',
+];
+const dodgeMessages = [
+  '"Esquivas el ataque del Guardián."',
+  '"Saltas hacia atrás justo a tiempo."',
+  '"El golpe pasa rozando tu armadura."',
+];
+
+function bossAttack(type) {
+  const bossHpEl = document.getElementById('boss-enemy-hp');
+  const playerHpEl = document.getElementById('boss-player-hp');
+  const msgEl = document.getElementById('boss-msg');
+
+  if (type === 'attack') {
+    bossHP -= 30;
+    if (bossHP < 0) bossHP = 0;
+    bossHpEl.style.width = bossHP + '%';
+    bossHits++;
+    msgEl.textContent = bossMessages[Math.min(bossHits - 1, bossMessages.length - 1)];
+    if (bossHP <= 0) {
+      document.getElementById('btn-defeat-boss').style.display = 'inline-block';
+      msgEl.textContent = '"¡El Guardián Corrupto cae de rodillas!"';
+      document.querySelector('.boss-visual').style.opacity = '.3';
+    }
+  } else {
+    const curPlayer = parseInt(playerHpEl.style.width) || 80;
+    playerHpEl.style.width = Math.max(curPlayer - 5, 30) + '%';
+    msgEl.textContent = dodgeMessages[Math.floor(Math.random() * dodgeMessages.length)];
+  }
+}
+
+function restartExperience() {
+  go(1);
+  document.getElementById('progress-bar').style.width = '0%';
+}
+
+// Init
+updateUX(1);
+</script>
+</body>
+</html>
